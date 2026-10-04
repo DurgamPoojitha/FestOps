@@ -1,0 +1,12 @@
+# config/scenario_default.yaml
+# ============================
+# Role D — Default Sanity-Check Scenario
+# Zero disruption probability to test auction convergence and baseline allocation.
+
+name: "default_sanity_check"
+description: "Sanity check simulation with zero disruptions to verify auction convergence."
+rounds: 10
+disruption_probability: 0.0
+seed: 42
+committees_file: "config/committees.yaml"
+resources_file: "config/resources.yaml"
