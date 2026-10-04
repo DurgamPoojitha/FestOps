@@ -1,95 +1,88 @@
-from typing import Any
+from __future__ import annotations
 
+from typing import Any
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
 
+def _get_resource_id(resource: dict | str | Any) -> str:
+    """Return a resource ID from a dict, object, or string."""
+    if isinstance(resource, dict):
+        return str(resource["id"])
+    return str(getattr(resource, "id", resource))
+
+
 def build_utility_matrix(
     committees: list[Any],
-    resources: list[dict | Any],
+    resources: list[dict | str | Any],
 ) -> np.ndarray:
     """
-    Build a matrix where each row represents a committee
-    and each column represents a resource.
+    Build the committee × resource utility matrix.
 
-    The utility is calculated using the CommitteeAgent's
-    compute_valuation() method.
+    Only resources that a committee wants or accepts as substitutes
+    receive a positive valuation.
     """
-    matrix = np.zeros((len(committees), len(resources)), dtype=float)
+    n_committees = len(committees)
+    n_resources = len(resources)
+
+    utility_matrix = np.zeros((n_committees, n_resources))
 
     for i, committee in enumerate(committees):
-        for j, resource in enumerate(resources):
-            matrix[i, j] = committee.compute_valuation(resource)
+        wanted = getattr(committee, "wanted_resources", [])
+        substitutes = getattr(committee, "substitutes", {})
 
-    return matrix
+        all_acceptable = set(wanted)
+
+        for subs in substitutes.values():
+            all_acceptable.update(subs)
+
+        for j, resource in enumerate(resources):
+            resource_id = _get_resource_id(resource)
+
+            if resource_id in all_acceptable:
+                utility_matrix[i, j] = committee.compute_valuation(
+                    {"id": resource_id}
+                )
+
+    return utility_matrix
 
 
 def compute_hungarian_baseline(
     committees: list[Any],
-    resources: list[dict | Any],
-) -> dict[str, Any]:
+    resources: list[dict | str | Any],
+) -> tuple[float, dict[str, str]]:
     """
-    Compute the centralized optimal assignment using
-    the Hungarian algorithm.
+    Compute the centralized theoretical maximum utility
+    using the Hungarian Algorithm.
 
     Returns:
-        assignment: list of committee/resource assignments
-        total_utility: total utility of the assignment
-        efficiency: normalized efficiency percentage
-        utility_matrix: matrix used for the calculation
+        tuple:
+            max_utility: Maximum total utility.
+            assignment: Mapping of {resource_id: committee_id}.
     """
     if not committees or not resources:
-        return {
-            "assignment": [],
-            "total_utility": 0.0,
-            "efficiency": 0.0,
-            "utility_matrix": np.zeros(
-                (len(committees), len(resources)),
-                dtype=float,
-            ),
-        }
+        return 0.0, {}
 
     utility_matrix = build_utility_matrix(committees, resources)
 
-    # linear_sum_assignment minimizes cost, so negate utilities
-    row_indices, col_indices = linear_sum_assignment(-utility_matrix)
+    # Hungarian algorithm minimizes cost,
+    # so negate utility to maximize it.
+    cost_matrix = -utility_matrix
 
-    assignment = []
+    row_ind, col_ind = linear_sum_assignment(cost_matrix)
 
-    for row, col in zip(row_indices, col_indices):
-        committee_id = committees[row].id
-
-        resource = resources[col]
-        if isinstance(resource, dict):
-            resource_id = resource["id"]
-        else:
-            resource_id = resource.id
-
-        utility = float(utility_matrix[row, col])
-
-        assignment.append(
-            {
-                "committee_id": committee_id,
-                "resource_id": resource_id,
-                "utility": utility,
-            }
-        )
-
-    total_utility = sum(item["utility"] for item in assignment)
-
-    max_possible = float(
-        np.max(utility_matrix, axis=1).sum()
+    max_utility = float(
+        utility_matrix[row_ind, col_ind].sum()
     )
 
-    efficiency = (
-        (total_utility / max_possible) * 100
-        if max_possible > 0
-        else 0.0
-    )
+    assignment: dict[str, str] = {}
 
-    return {
-        "assignment": assignment,
-        "total_utility": total_utility,
-        "efficiency": efficiency,
-        "utility_matrix": utility_matrix,
-    }
+    for row, col in zip(row_ind, col_ind):
+        utility = utility_matrix[row, col]
+
+        if utility > 0:
+            resource_id = _get_resource_id(resources[col])
+            committee_id = str(committees[row].id)
+            assignment[resource_id] = committee_id
+
+    return max_utility, assignment
