@@ -29,22 +29,21 @@ class DisruptionAgent:
     def maybe_trigger(
         self,
         round_num: int,
-        resources: list[dict | Any] | None = None,
+        targetable_resources: list[dict | Any] | None = None,
     ) -> DisruptionEvent | None:
         """
         Randomly trigger a disruption according to the configured
         probability.
 
-        If a disruption occurs, one resource is selected and a
-        DisruptionEvent is returned.
+        Only currently targetable resources are considered.
         """
-        if resources is None or not resources:
+        if targetable_resources is None or not targetable_resources:
             return None
 
         if self.rng.random() >= self.probability:
             return None
 
-        resource = self.rng.choice(resources)
+        resource = self.rng.choice(targetable_resources)
 
         if isinstance(resource, dict):
             resource_id = resource["id"]
@@ -62,7 +61,6 @@ class DisruptionAgent:
         self.events.append(event)
 
         return event
-
     def force_trigger(
         self,
         resource_id: str,
