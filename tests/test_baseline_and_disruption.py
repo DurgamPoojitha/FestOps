@@ -1,3 +1,19 @@
+"""
+tests/test_baseline_and_disruption.py
+=====================================
+Role C — Pytest suite for Hungarian baseline and DisruptionAgent.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+import sys
+
+# Ensure project root is in sys.path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from agents.committee_agent import CommitteeAgent
 from agents.disruption_agent import DisruptionAgent
 from core.baseline import compute_hungarian_baseline

@@ -1,3 +1,9 @@
+"""
+core/baseline.py
+================
+Role C — Centralized optimal baseline via Hungarian algorithm (linear_sum_assignment).
+"""
+
 from __future__ import annotations
 
 from typing import Any

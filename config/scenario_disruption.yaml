@@ -1,0 +1,12 @@
+# config/scenario_disruption.yaml
+# ===============================
+# Role D — Disruption Recovery Scenario
+# Non-zero disruption probability (0.35) to evaluate re-negotiation, fallback substitutes, and resilience.
+
+name: "disruption_resilience"
+description: "Dynamic simulation with 0.35 disruption probability to evaluate re-negotiation and resilience."
+rounds: 15
+disruption_probability: 0.35
+seed: 42
+committees_file: "config/committees.yaml"
+resources_file: "config/resources.yaml"
