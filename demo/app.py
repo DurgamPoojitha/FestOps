@@ -29,15 +29,14 @@ from agents.committee_agent import CommitteeAgent
 from core.simulator import Simulator
 from main import load_yaml
 
-# Real panel from Role A
-from demo.committee_panel import render_committee_panel
+# Real panels from all roles
+from demo.committee_panel import render_committee_panel  # Role A
+from demo.auction_panel import render_auction_panel      # Role B
+from demo.metrics_panel import render_metrics_panel      # Role C
 
-# STUB PANELS: Replace with real Role B and Role C panel modules when merged
-# from demo.auction_panel import render_auction_panel     # Future Role B
-# from demo.metrics_panel import render_metrics_panel     # Future Role C
-from stubs.demo_panels import render_auction_panel, render_metrics_panel
-from stubs.auctioneer_agent import AuctioneerAgent
-from stubs.disruption_agent import DisruptionAgent
+# Real agents
+from agents.auctioneer_agent import AuctioneerAgent      # Role B
+from agents.disruption_agent import DisruptionAgent      # Role C
 
 
 # ---------------------------------------------------------------------------
@@ -217,8 +216,8 @@ with st.sidebar:
 
     st.subheader("🧩 Architecture Status")
     st.markdown('<span class="status-badge badge-real">Role A: Real</span> Committees & Metrics', unsafe_allow_html=True)
-    st.markdown('<span class="status-badge badge-stub">Role B: Stub</span> Auctioneer Mechanism', unsafe_allow_html=True)
-    st.markdown('<span class="status-badge badge-stub">Role C: Stub</span> Disruption & Hungarian', unsafe_allow_html=True)
+    st.markdown('<span class="status-badge badge-real">Role B: Real</span> Auctioneer Mechanism', unsafe_allow_html=True)
+    st.markdown('<span class="status-badge badge-real">Role C: Real</span> Disruption & Hungarian', unsafe_allow_html=True)
     st.markdown('<span class="status-badge badge-real">Role D: Real</span> Simulator & Demo Shell', unsafe_allow_html=True)
 
 
@@ -272,11 +271,11 @@ with tab1:
     render_committee_panel(state)
 
 with tab2:
-    # Stub Role B panel
+    # Real Role B panel
     render_auction_panel(state)
 
 with tab3:
-    # Stub Role C panel
+    # Real Role C panel
     render_metrics_panel(state)
 
 with tab4:

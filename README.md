@@ -9,12 +9,12 @@
 
 | Role | Domain Owner | Implemented Files | Current Integration Status |
 |---|---|---|---|
-| **Role A** | Committees, Valuation & Fairness Metrics | `agents/committee_agent.py`, `core/metrics.py`, `config/committees.yaml`, `config/resources.yaml`, `demo/committee_panel.py`, `tests/test_committee_agent.py` | **Merged & Production** |
-| **Role B** | Auction Mechanism | `agents/auctioneer_agent.py`, `core/auction.py`, `demo/auction_panel.py`, `tests/test_auction.py` | **Stubbed in `stubs/`** (Pending Role B merge) |
-| **Role C** | Algorithmic Baseline & Disruption | `agents/disruption_agent.py`, `core/baseline.py`, `demo/metrics_panel.py`, `tests/test_baseline_and_disruption.py` | **Stubbed in `stubs/`** (Pending Role C merge) |
-| **Role D** | Environment Orchestration, Demo Shell & Tests | `core/simulator.py`, `main.py`, `config/scenario_default.yaml`, `config/scenario_disruption.yaml`, `demo/app.py`, `tests/test_integration.py`, `README.md` | **Fully Built & Verified** |
+| **Role A** | Committees, Valuation & Fairness Metrics | `agents/committee_agent.py`, `core/metrics.py`, `config/committees.yaml`, `config/resources.yaml`, `demo/committee_panel.py`, `tests/test_committee_agent.py` | **Merged & Verified** (44/44 tests passing) |
+| **Role B** | Auction Mechanism | `agents/auctioneer_agent.py`, `core/auction.py`, `demo/auction_panel.py`, `tests/test_auction.py` | **Integrated & Verified** (5/5 tests passing) |
+| **Role C** | Algorithmic Baseline & Disruption | `agents/disruption_agent.py`, `core/baseline.py`, `demo/metrics_panel.py`, `tests/test_baseline_and_disruption.py` | **Integrated & Verified** (2/2 tests passing) |
+| **Role D** | Environment Orchestration, Demo Shell & Tests | `core/simulator.py`, `main.py`, `config/scenario_default.yaml`, `config/scenario_disruption.yaml`, `demo/app.py`, `tests/test_integration.py`, `README.md` | **Integrated & Verified** (4/4 tests passing) |
 
-> **Note on Stubs:** Role B and Role C components are currently stood in by clean, fully-compatible mock implementations located in `stubs/`. Once Role B and Role C branches land, swapping them into `core/simulator.py` and `demo/app.py` is an immediate search-and-replace import swap.
+> **All Roles Integrated:** All components across all four roles are fully wired, tested, and passing (55/55 pytest tests passing).
 
 ---
 

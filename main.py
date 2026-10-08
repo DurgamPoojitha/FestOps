@@ -31,9 +31,9 @@ from core.metrics import (
 )
 from core.simulator import Simulator
 
-# STUB IMPORTS: Stand-in agents until Role B & Role C branches merge
-from stubs.auctioneer_agent import AuctioneerAgent
-from stubs.disruption_agent import DisruptionAgent
+# Real agent implementations
+from agents.auctioneer_agent import AuctioneerAgent
+from agents.disruption_agent import DisruptionAgent
 
 
 def load_yaml(filepath: str | Path) -> dict[str, Any]:

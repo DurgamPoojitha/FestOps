@@ -31,7 +31,7 @@ from core.metrics import (
     recovery_time,
     resource_utilization,
 )
-from stubs.baseline import compute_hungarian_baseline
+from core.baseline import compute_hungarian_baseline
 
 
 class Simulator:
@@ -410,6 +410,8 @@ class Simulator:
             "allocation_efficiency": 0.0,
             "fairness_index": 1.0,
             "resource_utilization": 0.0,
+            "obtained_utility": 0.0,
+            "max_utility": self.max_utility,
         }
 
         return {
