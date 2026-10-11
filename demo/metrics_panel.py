@@ -24,7 +24,24 @@ def render_metrics_panel(state: dict) -> None:
     - Decentralized vs. Centralized Benchmark Chart
     - Disruption & Recovery Tracking
     """
-    st.header("📊 Metrics & Baseline Comparison — Role C Panel")
+    st.markdown(
+        """
+        <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 8px;">
+            <div style="width: 42px; height: 42px; border-radius: 50%; background: #006d64; display: flex; align-items: center; justify-content: center; color: #ffffff; box-shadow: 0 4px 12px rgba(0, 109, 100, 0.25);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+            </div>
+            <div>
+                <h2 style="margin: 0; color: #005952; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 1.5rem;">Metrics & Baseline Comparison — Role C Panel</h2>
+                <span style="font-size: 0.85rem; color: #4a6864;">Decentralized auction efficiency vs Hungarian theoretical optimum & disruption resilience</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     current_round = state.get("round")
     if current_round is not None:
@@ -67,7 +84,7 @@ def render_metrics_panel(state: dict) -> None:
     st.divider()
 
     # 2. Algorithmic Baseline Comparison (Rubric Line Item)
-    st.subheader("⚖️ Algorithmic Modeling: Decentralized vs. Hungarian Baseline")
+    st.subheader("Algorithmic Modeling: Decentralized vs. Hungarian Baseline")
     st.markdown(
         "Comparison of decentralized sealed-bid auction performance against the "
         "centralized theoretical optimum computed via the **Hungarian Algorithm** "
@@ -82,7 +99,7 @@ def render_metrics_panel(state: dict) -> None:
         st.bar_chart(
             chart_data.set_index("Mechanism"),
             use_container_width=True,
-            color=["#3498db"],
+            color=["#0f766e"],
         )
     else:
         st.info("Run at least one simulation round to visualize welfare comparison.")
@@ -90,7 +107,7 @@ def render_metrics_panel(state: dict) -> None:
     st.divider()
 
     # 3. Disruption & Recovery Tracking
-    st.subheader("⚡ Environmental Disruptions & Resilience")
+    st.subheader("Environmental Disruptions & Resilience")
     disruptions: list[dict] = state.get("disruptions", [])
     events: list[dict] = state.get("events", [])
 

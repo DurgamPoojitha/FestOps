@@ -66,7 +66,25 @@ def render_committee_panel(state: dict) -> None:
     None
         All output is produced via ``st.*`` calls.
     """
-    st.header("🎭 Committees — Role A Panel")
+    st.markdown(
+        """
+        <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 8px;">
+            <div style="width: 42px; height: 42px; border-radius: 50%; background: #006d64; display: flex; align-items: center; justify-content: center; color: #ffffff; box-shadow: 0 4px 12px rgba(0, 109, 100, 0.25);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </div>
+            <div>
+                <h2 style="margin: 0; color: #005952; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 1.5rem;">Committees — Role A Panel</h2>
+                <span style="font-size: 0.85rem; color: #4a6864;">Committee valuation profiles, strategic budget constraints, and active bids</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     # -- Round indicator ------------------------------------------------------
     current_round = state.get("round")
@@ -85,10 +103,10 @@ def render_committee_panel(state: dict) -> None:
     # -- Bids table -----------------------------------------------------------
     bids: list[dict] = state.get("bids", [])
     if bids:
-        st.subheader("📋 Current Round Bids")
+        st.subheader("Current Round Bids")
         _render_bids_table(bids)
     else:
-        st.subheader("📋 Bids")
+        st.subheader("Bids")
         st.caption("No bids submitted yet for this round.")
 
 
@@ -135,7 +153,7 @@ def _render_single_committee(committee: dict) -> None:
         # -- Priorities -------------------------------------------------------
         priorities: dict = committee.get("priorities", {})
         if priorities:
-            st.markdown("**🎯 Priorities**")
+            st.markdown("**Priorities**")
             pcols = st.columns(len(priorities))
             for i, (key, val) in enumerate(priorities.items()):
                 pcols[i].metric(label=key.replace("_", " ").title(), value=f"{val:.2f}")
@@ -146,29 +164,29 @@ def _render_single_committee(committee: dict) -> None:
         rcol1, rcol2, rcol3 = st.columns(3)
 
         with rcol1:
-            st.markdown("**🎫 Wanted**")
+            st.markdown("<p style='font-size: 0.82rem; font-weight: 700; color: #006d64; text-transform: uppercase; margin-bottom: 6px;'>Wanted Resources</p>", unsafe_allow_html=True)
             wanted: list[str] = committee.get("wanted_resources", [])
             if wanted:
-                for r in wanted:
-                    st.write(f"• {r}")
+                tags = "".join(f"<span style='display:inline-block; background:#e6f7f4; color:#005952; border:1px solid #bceae2; border-radius:14px; padding:3px 10px; font-size:0.8rem; font-weight:600; margin:2px 4px 2px 0;'>{r}</span>" for r in wanted)
+                st.markdown(tags, unsafe_allow_html=True)
             else:
                 st.write("—")
 
         with rcol2:
-            st.markdown("**✅ Allocated**")
+            st.markdown("<p style='font-size: 0.82rem; font-weight: 700; color: #006d64; text-transform: uppercase; margin-bottom: 6px;'>Allocated Resources</p>", unsafe_allow_html=True)
             allocated: list[str] = committee.get("allocated_resources", [])
             if allocated:
-                for r in allocated:
-                    st.success(r)
+                tags = "".join(f"<span style='display:inline-block; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; border-radius:14px; padding:3px 10px; font-size:0.8rem; font-weight:600; margin:2px 4px 2px 0;'>{r}</span>" for r in allocated)
+                st.markdown(tags, unsafe_allow_html=True)
             else:
                 st.write("—")
 
         with rcol3:
-            st.markdown("**⚠️ Partial Fulfillment**")
+            st.markdown("<p style='font-size: 0.82rem; font-weight: 700; color: #006d64; text-transform: uppercase; margin-bottom: 6px;'>Partial Fulfillment</p>", unsafe_allow_html=True)
             partial: list[str] = committee.get("partial_fulfillment", [])
             if partial:
-                for r in partial:
-                    st.warning(r)
+                tags = "".join(f"<span style='display:inline-block; background:#ffedd5; color:#c2410c; border:1px solid #fed7aa; border-radius:14px; padding:3px 10px; font-size:0.8rem; font-weight:600; margin:2px 4px 2px 0;'>{r}</span>" for r in partial)
+                st.markdown(tags, unsafe_allow_html=True)
             else:
                 st.write("—")
 
