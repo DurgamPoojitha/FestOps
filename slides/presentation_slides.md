@@ -20,7 +20,7 @@
 
 | PEAS Element | Description |
 |---|---|
-| **Performance Measure** | • **Allocation Efficiency:** Achieved social welfare ÷ theoretical maximum (Hungarian benchmark)<br>• **Jain's Fairness Index:** Distribution of utility across all committees ($1.0 = \text{perfect equality}$)<br>• **Resource Utilization:** % of available physical assets awarded<br>• **Recovery Time:** Rounds elapsed before disrupted committees re-secure an asset |
+| **Performance Measure** | • **Allocation Efficiency:** Achieved social welfare ÷ theoretical maximum (Hungarian benchmark)<br>• **Jain's Fairness Index:** Distribution of utility across all committees (1.0 = perfect equality)<br>• **Resource Utilization:** % of available physical assets awarded (100% in Fest Ops)<br>• **Recovery Time:** Rounds elapsed before disrupted committees re-secure an asset (MTTR = 1.0 round) |
 | **Environment** | • **Partially Observable:** Committees know only their own budget, priorities, and public results<br>• **Multi-Agent:** Competitive, strategic bidders with conflicting objectives<br>• **Dynamic & Stochastic:** Random environmental shocks invalidate awards mid-run<br>• **Discrete-Round:** Sequential bidding rounds with substitute fallback |
 
 **Speaker Notes (Role A):**
@@ -40,7 +40,30 @@
 
 ---
 
-## Slide 4 — Mechanism Design: Non-Cooperative Bidding in a Cooperative Protocol (Role B)
+## Slide 4 — Agent Typology & Formal Agent Functions (Role B)
+
+### Russell & Norvig Agent Architectural Classification
+- **Committee Agent (Role A): Utility-Based & Goal-Directed Agent**
+  - **Internal State:** Remaining budget $B_i$, secured bundle $A_i$, priority queue $W_i$.
+  - **Objective:** Maximize cumulative utility $\sum U_i(r)$ subject to budget constraint $B_i \ge 0$.
+  - **Agent Function ($f: \mathcal{P}^* \to \mathcal{A}$):**
+    $$f_{\text{committee}}(p^*) = \begin{cases} \text{SubmitBid}(r, b_i) & \text{if eligible and } b_i > 0 \\ \text{SelectSubstitute}(r) & \text{if loss notification} \\ \text{RequeueRequest}(r) & \text{if disruption notification} \end{cases}$$
+
+- **Auctioneer Agent (Role B): Model-Based Reflex Agent**
+  - **Internal State:** Resource catalog $\mathcal{R}$, registered bidders $\mathcal{C}$, round counter $t$.
+  - **Objective:** Validates budget bounds, executes sealed first-price clearing, resolves ties deterministically.
+  - **Agent Function:** $f_{\text{auctioneer}}(\{b_i\}) = \langle \text{Winner} = \arg\max(b_i), \; \text{ClearingPrice} = \max(b_i) \rangle$
+
+- **Disruption Agent (Role C): Stochastic Environment Hazard Agent**
+  - **Internal State:** Provisional allocation matrix, shock probability $p$.
+  - **Agent Function:** $f_{\text{disruption}}(\text{Allocations}, p) = \text{Invalidate}(r^*)$ with probability $p$, else $\emptyset$.
+
+**Speaker Notes (Role B):**
+> "To satisfy our agent analysis rubric, we classify our agents by architecture: Committees are utility-based agents balancing utility gains against budget depletion; the Auctioneer is a model-based reflex agent enforcing strict deterministic market rules; and the Disruption Agent acts as an environmental adversary injecting Bernoulli shocks."
+
+---
+
+## Slide 5 — Mechanism Design: Non-Cooperative Bidding in a Cooperative Protocol (Role B)
 
 > *"Agents are self-interested/non-cooperative in their bidding (each maximizes its own utility), operating inside a cooperatively-designed mechanism (the auction protocol) whose purpose is to convert individually rational bidding into a globally efficient outcome."*
 
@@ -55,20 +78,61 @@
 
 ---
 
-## Slide 5 — Why the Problem Demands a Multi-Agent Approach (Role C)
+## Slide 6 — Search Strategy & Mathematical Bidding Logic (Role B)
 
-### Why Not a Single Central Planner?
-1. **Private Information Protection:** Independent student bodies have proprietary priorities and internal budget trade-offs they cannot or will not reveal to a central authority.
-2. **Computational Scalability:** Centralized global optimization becomes brittle and politically fraught when individual utility functions are subjective and private.
-3. **Robustness to Dynamic Shocks:** When equipment burns out or rain shuts down an open-air venue, a central planner must restart global rescheduling from scratch.
-4. **Decentralized Emergence:** Autonomous agents naturally negotiate local substitute trade-offs, enabling graceful degradation and rapid recovery.
+### Heuristic State-Space Search & Liquidity Preservation
+- **Formal Search Formulation:**
+  - **State Space ($S$):** $\langle B_i \text{ (budget)}, \; A_i \text{ (won assets)}, \; W_i \text{ (wanted queue)}, \; t \text{ (round)} \rangle$
+  - **Actions $A(s)$:** Submit bid $b \in [0, B_i]$ on resource $r$, or pass to conserve capital.
+  - **State Transitions:**
+    - **Win:** $B_i \leftarrow B_i - P^*, \; A_i \leftarrow A_i \cup \{r\}, \; W_i \leftarrow W_i \setminus \{r\}$
+    - **Loss:** $B_i \leftarrow B_i, \; W_i \leftarrow \text{fallback substitute } W_i'$ (pays ₹0)
+    - **Disrupted:** $A_i \leftarrow A_i \setminus \{r\}, \; W_i \leftarrow W_i \cup \{r\}$ (instant requeue)
+  - **Goal:** Maximize $\sum_{r \in A_i} U_i(r)$ subject to $B_i \ge 0$ before round $T$.
 
-**Speaker Notes (Role C):**
-> "Why does fest logistics demand a multi-agent system rather than a central database? First: privacy. Committees have distinct priorities they don't want to expose. Second: resilience. When a venue becomes unavailable mid-fest, a central planner would have to re-solve a monolithic NP-hard problem for everyone. In our decentralized system, only the affected committee re-enters the bidding loop, exploring localized substitute options while unaffected events proceed without interruption."
+- **Strategic Bidding Formulation:**
+  - **Dynamic Valuation:** $v_i(r) = V_{\text{base}}(i, r) \times (1 - \delta_i)^{\text{round}-1} \times \min\left(1.0, \; \frac{B_i}{\text{cost}(r)}\right)$
+  - **Bid Shading Heuristic:** $b_i(r) = \min(B_i, \; \alpha_i \cdot v_i(r)), \quad \alpha_i \in [0.85, 1.00]$
+  - **Greedy Substitute Search on Loss:** $h(r') = \frac{U_i(r')}{\text{expected\_cost}(r')} \cdot \mathbb{I}(r' \in \text{Available})$
+
+**Speaker Notes (Role B):**
+> "Instead of a brute-force combinatorial search, each committee executes a constrained heuristic search over rounds. The bidding function dynamically shades valuations between 85% and 100% to conserve capital, and when an auction is lost, the agent executes a local substitute search to immediately redirect funds to secondary assets."
 
 ---
 
-## Slide 6 — Algorithmic Modeling & Centralized Optimal Benchmark (Role C)
+## Slide 7 — Multi-Agent Protocol & Worked Round Example (Role C)
+
+### Protocol Sequence Flow:
+```
+  Auctioneer                    Committee A (Cultural)         Committee B (Tech)             Disruption Agent
+      │                                   │                           │                              │
+      │── 1. AnnounceResource(hall) ─────>│                           │                              │
+      │── 1. AnnounceResource(hall) ─────────────────────────────────>│                              │
+      │                                   │                           │                              │
+      │<── 2. Bid(Cultural, hall, 1000) ──│                           │                              │
+      │<── 2. Bid(Tech, hall, 225) ───────────────────────────────────│                              │
+      │                                   │                           │                              │
+      │── 3. ResolveWinner(Cultural, 1000)                                                           │
+      │── 4. Award(hall) ────────────────>│ (Deducts ₹1000)           │                              │
+      │── 4. Reject ─────────────────────────────────────────────────>│ (Falls back to substitute)   │
+      │                                   │                           │                              │
+      │── 5. CheckEnvironmentState ─────────────────────────────────────────────────────────────────>│
+      │<── 6. DisruptionEvent(hall) ─────────────────────────────────────────────────────────────────│
+      │── 7. Invalidate & Re-auction ────>│ (Forced Requeue)          │                              │
+```
+
+### Concrete Worked Example (Round 1: Main Auditorium Evening):
+- **Contenders:** Cultural Night (Budget ₹1000, Valuation ₹1100) vs Technical Fest (Budget ₹800, Valuation ₹250).
+- **Bids Submitted:** Cultural Night bids **₹1000.00** | Technical Fest bids **₹225.00**.
+- **Clearing:** Cultural Night **WINS** at clearing price **₹1000.00** (First-price rule).
+- **Outcomes:** Cultural budget becomes **₹0.00**; Technical Fest pays **₹0.00** and shifts Round 2 target to *Open Air Theatre*.
+
+**Speaker Notes (Role C):**
+> "Here is the exact message passing flow. In Round 1, both Cultural and Tech committees compete for the Main Auditorium. Cultural bids its max budget of 1000, while Tech bids 225. Cultural wins and pays 1000; Tech pays zero and immediately activates its substitute logic, pivoting to the Open Air Theatre for the next round."
+
+---
+
+## Slide 8 — Algorithmic Modeling & Centralized Optimal Benchmark (Role C)
 
 ### The Hungarian Algorithm Benchmark (`scipy.optimize.linear_sum_assignment`)
 - To evaluate our decentralized auction scientifically, we modeled the centralized assignment problem:
@@ -88,11 +152,11 @@ Resource Utilization  = 100.0% (6/6 unique campus assets fully deployed)
 ```
 
 **Speaker Notes (Role C):**
-> "To satisfy our algorithmic modeling requirement, we built a centralized baseline using the Hungarian Algorithm via SciPy's linear_sum_assignment. This calculates the theoretical maximum social welfare achievable if an omniscient central planner had perfect knowledge of every committee's utility function. In our default scenario, the decentralized auction achieves 100% resource utilization and over 42% theoretical efficiency, even with partial observability and strict financial constraints."
+> "To satisfy our algorithmic modeling requirement, we built a centralized baseline using the Hungarian Algorithm via SciPy's linear_sum_assignment. This calculates the theoretical maximum social welfare achievable if an omniscient central planner had perfect knowledge of every committee's utility function. In our default scenario, the decentralized auction achieves 100% resource utilization and 42.2% theoretical efficiency, even with partial observability and strict financial constraints."
 
 ---
 
-## Slide 7 — Tech Stack & Architecture (Role D)
+## Slide 9 — Tech Stack, Architecture & Setup Steps (Role D)
 
 ```
 FestOps Architecture
@@ -113,32 +177,45 @@ FestOps Architecture
 └───────────────────┘ └────────────────┘ └───────────────┘
 ```
 - **Language & Core:** Python 3.11+, plain custom classes (zero heavy frameworks).
-- **Optimization & Math:** `scipy.optimize.linear_sum_assignment`, `numpy`, `pandas`.
-- **UI & Visualization:** Streamlit dashboard with reactive metric gauges and manual shock injection.
-- **Testing:** 55 comprehensive tests across 4 pytest suites (100% pass rate).
+- **Why No Mesa/SPADE:** Custom classes eliminate centralized scheduler bottlenecks and XMPP daemon overhead, providing zero-latency dataclass messaging and full determinism.
+- **Reproducible 3-Step Setup:**
+  ```bash
+  git clone https://github.com/DurgamPoojitha/FestOps.git && cd FestOps
+  pip install -r requirements.txt
+  python -m pytest tests/ -v           # 55/55 tests passing (< 3s)
+  streamlit run demo/app.py            # Dashboard at http://localhost:8501
+  ```
 
 **Speaker Notes (Role D):**
-> "Here is our system architecture. We intentionally built pure, custom Python classes rather than black-box agent libraries like Mesa, ensuring full control over message contracts and state serialization. Role D's discrete-round Simulator acts as the clock and message broker: each round it discovers contested resources, calls the Role B Auctioneer, applies outcomes, checks the Role C Disruption Agent, and logs state transitions directly into pandas DataFrames."
+> "Here is our system architecture. We intentionally built pure, custom Python classes rather than black-box agent libraries like Mesa, ensuring full control over message contracts and state serialization. The entire project is 100% reproducible: three simple commands clone the repo, install dependencies, run all 55 tests, and launch the dashboard."
 
 ---
 
-## Slide 8 — Advantages of the Multi-Agent Approach: Resilience under Disruption (Role D)
+## Slide 10 — Empirical Testing Scenarios & Results Benchmark (Role D)
 
-### Empirical Recovery under Stochastic Environmental Shocks
-- **The Disruption Scenario:** In `scenario_disruption.yaml`, equipment and venues fail with 35% probability per round.
-- **Autonomous Recovery Trajectory:**
-  1. **Shock Injected:** Round 2 — `volunteers_10` disrupted for `cultural_night`.
-  2. **Automated Requeue:** Resource instantly freed; affected committee re-enters queue.
-  3. **Recovery Achieved:** Successfully re-awarded in Round 3 (Recovery Time = **1 round**).
-  4. **Substitute Activation:** When primary venues are contested, losing committees automatically shift to viable alternatives (e.g., `open_air_theatre_evening` for `main_auditorium_evening`).
-- **Zero Human Intervention Required:** The multi-agent protocol self-heals without central rescheduling.
+| Performance KPI | Scenario 1: Default Baseline (`scenario_default.yaml`) | Scenario 2: Disruption Resilience (`scenario_disruption.yaml`) |
+|---|---|---|
+| **Disruption Probability ($p$)** | $0.00$ (Static / Normal) | **$0.35$ (Dynamic Environmental Shocks)** |
+| **Disruptions Injected** | 0 events | **4 events** (`volunteers`, `projector`, `ground` $\times 2$) |
+| **Disruption Recovery Rate** | N/A | **75.0%** (3 of 4 recovered in fallback rounds) |
+| **Mean Time to Recover (MTTR)** | N/A | **1.0 Round** (Autonomous self-healing) |
+| **Social Welfare (Auction)** | **₹825.5** | **₹473.7** (Reflects shock downtime) |
+| **Hungarian Optimal Welfare** | ₹1,955.5 | ₹1,955.5 |
+| **Allocation Efficiency** | **42.22%** (Reflects budget caps) | **24.23%** |
+| **Jain's Fairness Index** | **0.6974** (Equitable spread) | **0.5515** |
+| **Resource Utilization** | **100.0%** (6/6 assets) | **100.0%** (6/6 assets) |
+
+**Key Takeaways:**
+- 100% Resource Utilization achieved across both scenarios.
+- Dynamic re-negotiation achieves autonomous recovery in just 1.0 round without central intervention.
+- Price of Anarchy empirically validated: decentralized competition achieves 42.2% efficiency compared to an omniscient global optimizer.
 
 **Speaker Notes (Role D):**
-> "The true payoff of this multi-agent architecture is resilience. When we simulate real-world shocks—like a 35% disruption probability where PA systems fail or venues become unusable—the system doesn't crash or stall. In our tests, affected committees automatically re-queue and re-acquire resources within just 1 to 2 rounds, or pivot to pre-configured substitute venues. This proves that decentralized multi-agent coordination provides superior operational robustness for campus events."
+> "The true payoff of our multi-agent architecture is resilience. In our disruption scenario with a 35% failure rate, four separate assets were disrupted mid-fest. The system achieved a 75% recovery rate with an average recovery time of just 1 round. Even with unexpected shocks, 100% of campus assets were successfully utilized without any central replanning."
 
 ---
 
-## Slide 9 — Live Demonstration (All Roles)
+## Slide 11 — Live Demonstration (All Roles)
 
 ### Live Workflow Walkthrough:
 1. **Initial State (Role A):** Inspect 5 committee budgets and strategic priority weights (Turnout vs Sponsor Visibility vs Budget Sensitivity).
