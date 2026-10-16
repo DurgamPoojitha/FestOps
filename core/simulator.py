@@ -179,16 +179,23 @@ class Simulator:
             auction_results = self.auctioneer.run_round(contested_resources, self.committees)
             self.current_round_results.extend(auction_results)
 
-            # Record bids placed during this round
-            for res_id in contested_resources:
-                for c in demand[res_id]:
-                    # Estimate or retrieve submitted bid for display
-                    b_amount = c.compute_valuation({"id": res_id})
+            # Record actual submitted bids from the auctioneer
+            if hasattr(self.auctioneer, "last_round_bids") and self.auctioneer.last_round_bids:
+                for b in self.auctioneer.last_round_bids:
                     self.current_round_bids.append({
-                        "committee_id": c.id,
-                        "resource_id": res_id,
-                        "amount": b_amount,
+                        "committee_id": getattr(b, "committee_id", ""),
+                        "resource_id": getattr(b, "resource_id", ""),
+                        "amount": getattr(b, "amount", 0.0),
                     })
+            else:
+                for res_id in contested_resources:
+                    for c in demand[res_id]:
+                        b_amount = c.compute_valuation({"id": res_id})
+                        self.current_round_bids.append({
+                            "committee_id": c.id,
+                            "resource_id": res_id,
+                            "amount": b_amount,
+                        })
 
             # 5. Apply auction outcomes
             for result in auction_results:
